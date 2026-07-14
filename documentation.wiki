@@ -1,0 +1,334 @@
+# Zoryth AI Boss - Full Documentation
+
+Welcome to the complete wiki for the Zoryth AI Boss framework! Here you will find everything you need to know about configuring the plugin, creating custom bosses, utilizing abilities, and managing arenas.
+
+---
+
+# 1. ⚙️ Global Configuration
+
+The `config.yml` file is automatically generated in `plugins/ZorythAIBoss/` when the server starts. It contains global settings that apply to all bosses, performance tweaks, and external plugin integrations.
+
+## 🔧 General Settings
+These settings affect the entire plugin experience.
+
+- **`debug`** (`true`/`false`): Prints detailed debug information in the server console for troubleshooting. (Default: `false`)
+- **`prefix`**: The prefix shown before plugin messages, supporting MiniMessage format.
+
+## 🚀 Performance
+Optimize how the plugin processes boss logic.
+
+- **`ai-tick-rate`**: How often a boss updates its AI in server ticks. (Default: `2` = 10 times a second)
+- **`bossbar-update-rate`**: How often the boss bar refreshes. (Default: `5` ticks)
+- **`target-update-rate`**: How often the boss scans for new targets. (Default: `10` ticks)
+- **`player-cache-rate`**: How often the plugin scans for nearby players for performance caching. (Default: `20` ticks)
+- **`bossbar-view-distance`**: The maximum distance (in blocks) players can see a boss's health bar. (Default: `80`)
+- **`max-active-bosses`**: Hard limit on the number of active bosses allowed on the server. `0` means unlimited. (Default: `0`)
+- **`damage-tracking-expiry`**: Time in seconds before a player's damage contribution is cleared if they disconnect or leave the area. (Default: `300`)
+
+## 🎯 Default AI Parameters
+Fallback AI mechanics applied to all bosses unless overridden in their specific configurations.
+
+- **`default-aggro-range`**: Maximum block radius to scan for targets. (Default: `30`)
+- **`default-leash-distance`**: If the boss goes past this distance from its spawn point, it returns. (Default: `60`)
+- **`default-target-mode`**: How a boss prioritizes targets. Valid options:
+  - `NEAREST` (Closest player)
+  - `LOWEST_HEALTH` (Focuses on the weakest player)
+  - `HIGHEST_HEALTH` (Focuses on the strongest player)
+  - `HIGHEST_DAMAGE` (Focuses on whoever deals the most damage)
+  - `RANDOM` (Picks a random nearby player)
+  - `MOST_AGGRESSIVE` (Prioritizes frequent attackers)
+- **`default-rage-threshold`**: The health percentage when a boss automatically enters "Rage". (Default: `15%`)
+- **`arrow-dodge-chance`**: The chance (0.0 to 1.0) a boss dodges incoming arrows. (Default: `0.2`)
+
+## 🏟️ Arena Defaults
+Global settings for the boss combat arena feature.
+
+- **`lock-delay`**: Time in seconds before locking players inside the arena after combat begins. (Default: `3`)
+- **`unlock-delay`**: Time in seconds before unlocking the arena after the boss is defeated. (Default: `5`)
+- **`block-enderpearl`**: Prevents escaping the arena using Ender Pearls. (Default: `true`)
+- **`block-chorus-fruit`**: Prevents escaping the arena using Chorus Fruit. (Default: `true`)
+
+## 🌍 Spawn Rules
+Global restrictions on where and when bosses can spawn.
+
+- **`allowed-worlds`**: A list of world names where boss spawning is allowed. If empty, all worlds are allowed.
+- **`min-players`**: The minimum number of online players required before any boss can spawn. (Default: `0`)
+- **`default-respawn-delay`**: Default auto-respawn timer in seconds. (Default: `0` / disabled)
+- **`respect-worldguard`**: Whether the plugin should prevent bosses from spawning inside protected WorldGuard regions. (Default: `true`)
+
+## 💰 Loot System Settings
+Global mechanics for dropping loot when a boss is defeated.
+
+- **`default-mode`**: Loot distribution style.
+  - `PER_PLAYER`: Rolls a chance for every eligible participant independently.
+  - `SHARED`: Chooses the top damage dealer for the loot.
+- **`min-damage-percent`**: Minimum damage contribution required for a player to be eligible for loot. (Default: `5.0%`)
+- **`drop-at-location`**: Drop the items on the ground instead of directly into the player's inventory. (Default: `false`)
+
+## 🔗 Plugin Hooks
+Toggle support for optional external plugins. Setting these to `true` enables them if the plugins are installed on your server.
+
+- **`placeholderapi`**: Support for PAPI placeholders (`%zoryth_boss_...%`).
+- **`vault`**: Economy support for giving cash as loot.
+- **`worldguard`**: Advanced region protection and spawn restrictions.
+- **`citizens`**: Enables creating NPC-based bosses instead of regular vanilla entities.
+
+---
+
+# 2. 🧟 Boss Creation Guide
+
+Every boss in Zoryth AI Boss is configured using a unique YAML file located in the `plugins/ZorythAIBoss/bosses/` directory.
+
+To create a boss, copy an existing YAML file, rename it (e.g. `my_boss.yml`), and edit its contents. You can reload changes in-game using `/zoryth reload`.
+
+## 📜 Basic Setup
+Start by defining the core properties of the boss.
+
+```yaml
+id: "example_boss"                           # Unique internal identifier
+display-name: "<red><bold>Fire Demon</bold></red>"  # Display name above head
+entity-type: "BLAZE"                         # Vanilla Entity type
+```
+
+### Supported Entity Types
+Zoryth AI Boss supports all standard Bukkit `EntityType`s. For example: `ZOMBIE`, `SKELETON`, `BLAZE`, `IRON_GOLEM`, `WARDEN`.
+
+## ❤️ Stats and Attributes
+Adjust the boss's combat stats.
+
+```yaml
+attributes:
+  max-health: 1000.0           # Total health
+  damage: 20.0                 # Melee attack damage
+  speed: 0.3                   # Movement speed
+  knockback-resistance: 1.0    # 1.0 = Immune to knockback
+```
+
+## 🧠 AI and Targeting
+Override the default global AI logic.
+
+```yaml
+ai:
+  aggro-range: 40           # Blocks to scan for targets
+  leash-distance: 80        # Max distance from spawn before resetting
+  target-mode: "LOWEST_HEALTH" # Priority target selection
+  rage-threshold: 20        # Health percentage to trigger rage mode
+```
+
+## 🎨 Boss Bar Settings
+Customize the appearance of the health bar at the top of the screen.
+
+```yaml
+boss-bar:
+  color: RED
+  style: SEGMENTED_10
+  title: "<red>⚔ {boss} — Phase {phase}</red>"
+```
+*Tip: Placeholders like `{boss}`, `{phase}`, and `{health_percent}` can be used dynamically.*
+
+## 🎭 Phase Definitions
+Phases allow the boss to become stronger as its health decreases. When a boss's health drops below a threshold percentage, it enters a new phase.
+
+```yaml
+phases:
+  phase1:
+    name: "<yellow>Warm Up</yellow>"
+    threshold: 100                 # Triggered at 100% health
+  phase2:
+    name: "<dark_red>Enraged</dark_red>"
+    threshold: 40                  # Triggered at 40% health
+    speed-multiplier: 1.5          # Increases speed by 50%
+```
+
+## 🛡️ Equipment
+Give your boss custom gear! (Only applicable for entities that can wear armor, like Zombies/Skeletons).
+
+```yaml
+equipment:
+  helmet: DIAMOND_HELMET
+  chestplate: NETHERITE_CHESTPLATE
+  leggings: DIAMOND_LEGGINGS
+  boots: IRON_BOOTS
+  mainhand: DIAMOND_SWORD
+  offhand: SHIELD
+```
+
+## 📦 Custom Models (v1.5 Feature)
+Add resource pack integration and customize spawn eggs.
+
+```yaml
+model:
+  cmd: 1001   # Assigns CustomModelData 1001 to the boss's spawn egg item
+```
+You can grant players this specific egg using `/zoryth giveegg example_boss`.
+
+---
+
+# 3. ⚔️ Boss Abilities
+
+Abilities are powerful custom actions that a boss can cast periodically. You define abilities within the `abilities:` section of a boss's YAML file.
+
+## 🛠️ Ability Configuration
+Every ability requires a `type`, a `cooldown` (in seconds), and optional parameters depending on the ability type. You can also restrict an ability to specific phases.
+
+```yaml
+abilities:
+  my_custom_ability:
+    type: "fireball"           # The internal ID of the ability
+    cooldown: 10               # Cooldown in seconds between casts
+    conditions:
+      phase: "phase2"          # Only allowed in phase2 or later
+```
+
+## 📜 Full List of Abilities
+Zoryth AI Boss features **19 unique abilities** built-in:
+
+### Movement & Utility
+- **`dash`**: The boss rapidly dashes toward the current target.
+- **`leap`**: The boss leaps high into the air and crashes down.
+- **`teleport`**: The boss instantly teleports near the target.
+- **`shield`**: The boss conjures a temporary shield to absorb incoming damage.
+- **`roar`**: The boss roars, applying debuffs to nearby players and pushing them back.
+
+### Projectiles & Spells
+- **`fireball`**: The boss launches explosive fireballs at targets. *(Requires: `damage` value)*
+- **`lightning_strike`**: Calls down a lightning bolt on the target's position.
+- **`meteor_shower`**: Rains down massive meteors from the sky on multiple targets.
+- **`laser_beam`**: Fires a continuous, damaging beam in the direction of the target.
+- **`poison_cloud`**: Creates a lingering cloud of poison gas that damages players over time.
+
+### Area of Effect (AoE)
+- **`ground_slam`**: A massive melee area attack that knocks players back and deals heavy damage.
+- **`whirlwind`**: The boss spins violently, dealing continuous damage to anyone nearby.
+- **`earthquake`**: Violently shakes the ground, throwing players into the air and damaging them.
+- **`explosion`**: Triggers a delayed explosion centered around the boss.
+
+### Crowd Control & Special
+- **`ice_prison`**: Traps the target inside a cage of packed ice blocks for a few seconds.
+- **`black_hole`**: Creates a singularity that violently pulls all nearby players inward.
+- **`life_steal`**: Instantly siphons health from nearby enemies to heal the boss.
+- **`clone`**: Summons weaker, exact replicas of the boss to confuse players.
+- **`summon_minions`**: Spawns custom minions (e.g., zombies or skeletons) to assist the boss.
+
+## 📝 Example Setup
+
+```yaml
+abilities:
+  dash_attack:
+    type: dash
+    cooldown: 5
+
+  meteor_rain:
+    type: meteor_shower
+    cooldown: 30
+    damage: 25
+    conditions:
+      phase: phase2 # Only activates when health drops to phase 2 threshold
+```
+
+---
+
+# 4. 🏟️ Arenas & Spawning
+
+Zoryth AI Boss includes an advanced arena management system to lock players into epic combat encounters and dynamic auto-spawning features to keep your server alive with boss fights.
+
+## ⚔️ Combat Arenas
+The Arena system creates an invisible forcefield around the boss encounter, preventing players from running away or utilizing cheap tactics.
+
+### Configuration
+Add the `arena:` section to your boss YAML to enable it.
+
+```yaml
+arena:
+  enabled: true
+  # You can override global settings here
+```
+
+### How Arenas Work
+1. **Activation**: The arena automatically activates the moment a boss takes damage or attacks a player.
+2. **Lock-In**: The boss's current location becomes the center of the arena (radius determined by `leash-distance`).
+3. **Trapped**: Players inside the radius are locked in. Crossing the boundary will instantly bounce them back toward the boss.
+4. **Anti-Cheese**: Ender Pearls and Chorus Fruit are automatically disabled inside the arena.
+5. **Reset**: If all locked players die or log out, the boss despawns and the arena resets.
+
+## 🌍 Auto-Spawning
+Want bosses to spawn automatically in the world over time? Use the `auto-spawn` configuration!
+
+### Setup
+```yaml
+auto-spawn:
+  enabled: true
+  world: "world_nether"
+  x: 100.5
+  y: 65.0
+  z: -250.5
+  respawn-delay: 300   # Spawns every 5 minutes (300 seconds) after dying
+```
+
+### Details
+- Bosses will permanently respawn at these exact coordinates on a timer.
+- The `respawn-delay` cooldown is persistent, meaning if the server restarts, the timer remembers how much time was left!
+
+## 🚫 Spawn Rules & Restrictions
+Limit when and where a boss can spawn by configuring `spawn-rules`:
+
+```yaml
+spawn-rules:
+  worlds:
+    - "world"
+    - "boss_arena"
+  min-players: 5          # Spawns only if there are 5+ online players
+  max-instances: 2        # Maximum of 2 of this specific boss alive at once
+```
+
+**WorldGuard Integration**: By default (if WorldGuard is enabled in `config.yml`), bosses are prevented from spawning inside protected regions to avoid accidental griefing.
+
+---
+
+# 5. 💰 Loot System
+
+Zoryth AI Boss features a dynamic loot system that rewards players based on their contribution to the boss fight.
+
+## 🎲 Loot Modes
+You can control how loot is distributed using the `mode` setting in the `loot:` section.
+
+```yaml
+loot:
+  mode: SHARED   # Options: SHARED or PER_PLAYER
+```
+
+- **`SHARED`**: Only the player who dealt the highest total damage receives the loot drop.
+- **`PER_PLAYER`**: Every player who participated in the boss fight receives their own independent loot roll. This is highly recommended for public multiplayer servers to avoid loot stealing.
+
+*Note: In `config.yml`, you can set a `min-damage-percent` (default 5%) which requires a player to deal a minimum percentage of the boss's health in damage before they are eligible for loot drops.*
+
+## 📦 Defining Loot Entries
+Loot is defined as a list of entries under the `entries:` key.
+
+```yaml
+loot:
+  mode: PER_PLAYER
+  entries:
+    # Example 1: Vanilla Item Drop
+    - type: ITEM
+      chance: 1.0                # 1.0 = 100% chance, 0.5 = 50% chance
+      min-amount: 1
+      max-amount: 3              # Drops 1 to 3 diamonds
+      item:
+        material: DIAMOND
+        name: "<bcolor:aqua>Shiny Diamond</bcolor>"
+        
+    # Example 2: Command Execution (Great for custom items or crates)
+    - type: COMMAND
+      chance: 0.25               # 25% chance
+      commands:
+        - "eco give {player} 1000"
+        - "broadcast &a{player} got the ultra rare drop from the boss!"
+```
+
+### Supported Entry Types
+1. **`ITEM`**: Drops a physical Minecraft item. You can customize the `material` and `name` (supporting MiniMessage formatting).
+2. **`COMMAND`**: Executes console commands. The `{player}` placeholder will be replaced with the player's name who won the loot.
+
+### Global Drop Location
+By default, items go directly into the player's inventory to prevent them from burning in lava or falling into the void. If you want items to physically drop on the ground where the boss died, you can set `drop-at-location: true` in the global `config.yml`.
