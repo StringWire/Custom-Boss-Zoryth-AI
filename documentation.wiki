@@ -341,3 +341,32 @@ loot:
 
 ### Global Drop Location
 By default, items go directly into the player's inventory to prevent them from burning in lava or falling into the void. If you want items to physically drop on the ground where the boss died, you can set `drop-at-location: true` in the global `config.yml`.
+---
+
+# 6. ?? In-Game Boss Editor (GUI)
+
+Zoryth AI Boss features a powerful In-Game GUI that allows you to create and edit bosses on the fly without ever touching the configuration files!
+
+To access the Boss Editor, simply run \/zoryth gui\ or \/zoryth edit\ in-game.
+
+## ??? Boss Editor Features
+
+The Boss Editor provides an intuitive menu where you can modify the following boss settings:
+
+- **Create New Boss**: Start a new boss configuration from scratch.
+- **Display Name**: Change the visual name of the boss above its head.
+- **Entity Type**: Change the underlying Minecraft mob type (e.g., ZOMBIE, BLAZE).
+- **Health**: Adjust the boss's maximum health pool.
+- **Damage**: Modify the boss's melee attack damage.
+- **Speed**: Change the movement speed of the boss.
+- **Respawn Cooldown**: Set how long it takes for an auto-spawned boss to respawn.
+- **Dodge Chance**: Adjust the probability that the boss dodges incoming arrows.
+- **Setup Arena**: Opens the Arena Setup GUI to visually define the arena boundaries using the Arena Setup Wand.
+
+### How to use:
+1. Open the editor using \/zoryth gui\.
+2. Click on the boss you wish to edit (or click "+ Create New Boss").
+3. Click on the property you want to change (e.g., Health).
+4. The GUI will close, and you will be prompted to type the new value in chat.
+5. Type the new value (or type \cancel\ to abort).
+6. The boss configuration is automatically saved and the GUI will reopen!
