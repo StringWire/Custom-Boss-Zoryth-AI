@@ -235,8 +235,17 @@ Zoryth AI Boss includes an advanced arena management system to lock players into
 ## ⚔️ Combat Arenas
 The Arena system creates an invisible forcefield around the boss encounter, preventing players from running away or utilizing cheap tactics.
 
+### 🎮 In-Game Arena Setup (New!)
+You can easily configure arenas directly in-game using the Setup GUI!
+1. Open the Boss Editor using `/zoryth edit` and select your boss.
+2. Navigate to the Arena Setup menu.
+3. Click to get the **Arena Setup Wand**.
+4. **Left-Click** a block to set Position 1 and **Right-Click** to set Position 2.
+5. Click the Arena Status map to set the Spectator Spawn at your current location.
+6. Click **Save & Enable Arena** to instantly apply the changes!
+
 ### Configuration
-Add the `arena:` section to your boss YAML to enable it.
+You can also manually configure the `arena:` section in your boss YAML to enable it.
 
 ```yaml
 arena:
